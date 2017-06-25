@@ -66,10 +66,16 @@ try {
 		if (error) {
 			restoreVersion();
 			console.error("release error", error);
-			process.exit(shell.exec("npm publish").code);
+			process.exit(1);
 		}
 		else {
-			console.log(`${pkg.name} v${pkg.version} published!`.green);
+			if (shell.exec("npm publish").code !== 0) {
+				console.error("npm publish failed");
+				process.exit(1);
+			}
+			else {
+				console.log(`${pkg.name} v${pkg.version} published!`.green);
+			}
 		}
 	});
 }
