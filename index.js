@@ -6,12 +6,13 @@ const path = require("path");
 const fs = require("fs-extra");
 const publishRelease = require("publish-release");
 const semver = require("semver");
-// const shell = require("shelljs");
+const shell = require("shelljs");
 const globby = require("globby");
 const Mustache = require("mustache");
+require("colors");
 
-const bump = "patch, minor, major, prepatch, preminor, premajor, prerelease".split(", ");
-const argv = require('yargs') // eslint-disable-line
+const bump = "patch, , major, prepatch, preminor, premajor, prerelease".split(", ");
+const argv = require("yargs")
 	.alias("v", "version")
 	.describe("v", "bump the version")
 	.choices("v", bump)
@@ -46,6 +47,12 @@ buildTemplates({version: pkg.version, timestamp: new Date()});
 fs.writeFileSync("./package.json", `${JSON.stringify(pkg, null, "\t")}\n`, "utf8");
 
 try {
+	if (
+		shell.exec(`git commit -am "${pkg.version} release commit"`).code !== 0
+	) {
+		throw Error("failed to commit");
+	}
+
 	const repoInfo = pkg.repository.url.match(/github.com\/([^/]*)\/([^/]*).git/);
 
 	publishRelease({
@@ -59,7 +66,10 @@ try {
 		if (error) {
 			restoreVersion();
 			console.error("release error", error);
-			process.exit(1);
+			process.exit(shell.exec("npm publish").code);
+		}
+		else {
+			console.log(`${pkg.name} v${pkg.version} published!`.green);
 		}
 	});
 }
