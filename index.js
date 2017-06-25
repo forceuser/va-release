@@ -42,9 +42,9 @@ const settings = pkg["va-release"];
 if (argv.version) {
 	pkg.version = semver.inc(pkg.version, argv.version);
 }
-buildTemplates({version: pkg.version, timestamp: new Date()});
 
 fs.writeFileSync("./package.json", `${JSON.stringify(pkg, null, "\t")}\n`, "utf8");
+buildTemplates({version: pkg.version, timestamp: new Date()});
 
 try {
 	if (
