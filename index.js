@@ -48,7 +48,7 @@ buildTemplates({version: pkg.version, timestamp: new Date()});
 
 try {
 	if (
-		shell.exec(`git commit -am "${pkg.version} release commit" && git push`).code !== 0
+		shell.exec(`git add . && git commit -am "${pkg.version} release commit" && git push`).code !== 0
 	) {
 		throw Error("failed to commit");
 	}
