@@ -71,11 +71,10 @@ try {
 		else {
 			if (shell.exec("npm publish").code !== 0) {
 				console.error("npm publish failed");
-				if (shell.exec("git pull").code !== 0) {
-					process.exit(1);
-				}
+				process.exit(1);
 			}
 			else {
+				shell.exec("git pull");
 				console.log(`${pkg.name} v${pkg.version} published!`.green);
 			}
 		}
