@@ -2,9 +2,15 @@
 
 Simple tool for publishing releases to npm and github
 
-latest version: 1.0.9
+latest version: 1.0.10
 
 ## Installation
+
+#### Install as npm package
+
+```shell
+npm i va-release --save-dev
+```
 
 ## License
 
@@ -30,9 +36,3 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-
-#### Install as npm package
-
-```shell
-npm i va-release --save-dev
-```

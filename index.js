@@ -62,6 +62,10 @@ buildTemplates({
 	}
 });
 
+if (argv.templates) {
+	return;
+}
+
 
 fs.writeFileSync("./package.json", `${JSON.stringify(pkg, null, "\t")}\n`, "utf8");
 
