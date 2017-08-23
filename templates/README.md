@@ -6,6 +6,10 @@ latest version: {{version}}
 
 ## Installation
 
+## License
+
+{{#file}}../LICENSE{{/file}}
+
 #### Install as npm package
 
 ```shell

@@ -13,6 +13,8 @@ require("colors");
 
 const bump = "patch, , major, prepatch, preminor, premajor, prerelease".split(", ");
 const argv = require("yargs")
+	.alias("t", "templates")
+	.describe("t", "build templates")
 	.alias("v", "version")
 	.describe("v", "bump the version")
 	.choices("v", bump)
@@ -25,11 +27,19 @@ function restoreVersion () {
 	fs.writeFileSync("./package.json", `${JSON.stringify(pkg, null, "\t")}\n`, "utf8");
 }
 
+let currentFileDirectory = process.cwd();
 function buildTemplates (params) {
 	if (settings && settings.files && settings.files.length) {
 		settings.files.forEach(file => {
 			globby.sync(file.src, {cwd: file.cwd}).forEach(fp => {
-				fs.writeFileSync(path.resolve(file.dest, fp), Mustache.render(fs.readFileSync(path.resolve(file.cwd || "./", fp), "utf8"), params || {}));
+				currentFileDirectory = file.cwd;
+				fs.writeFileSync(
+					path.resolve(file.dest, fp),
+					Mustache.render(
+						fs.readFileSync(path.resolve(file.cwd || "./", fp), "utf8"),
+						params || {}
+					)
+				);
 			});
 		});
 	}
@@ -39,16 +49,25 @@ const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
 const oldVersion = pkg.version;
 const settings = pkg["va-release"];
 
-if (argv.version) {
+if (argv.version && !argv.templates) {
 	pkg.version = semver.inc(pkg.version, argv.version);
 }
 
+
+buildTemplates({
+	version: pkg.version,
+	timestamp: new Date(),
+	file () {
+		return (fp) => fs.readFileSync(path.resolve(currentFileDirectory || "./", fp), "utf8");
+	}
+});
+
+
 fs.writeFileSync("./package.json", `${JSON.stringify(pkg, null, "\t")}\n`, "utf8");
-buildTemplates({version: pkg.version, timestamp: new Date()});
 
 try {
 	if (
-		shell.exec(`git add . && git commit -am "${pkg.version} release commit" && git push`).code !== 0
+		shell.exec(`git commit -am "${pkg.version} release commit" && git push`).code !== 0
 	) {
 		throw Error("failed to commit");
 	}
@@ -74,7 +93,6 @@ try {
 				process.exit(1);
 			}
 			else {
-				shell.exec("git pull");
 				console.log(`${pkg.name} v${pkg.version} published!`.green);
 			}
 		}
