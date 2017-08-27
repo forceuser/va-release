@@ -88,7 +88,6 @@ try {
 		assets: settings && settings.assets ? globby.sync(settings.assets) : null
 	}, (error, release) => {
 		if (error) {
-			restoreVersion();
 			console.error("release error", error);
 			process.exit(1);
 		}
@@ -104,6 +103,10 @@ try {
 	});
 }
 catch (error) {
-	restoreVersion();
 	process.exit(1);
 }
+process.on("exit", (code) => {
+	if (code != 0) {
+		restoreVersion();
+	}
+});
