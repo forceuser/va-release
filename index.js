@@ -13,6 +13,8 @@ require("colors");
 
 const bump = "patch, , major, prepatch, preminor, premajor, prerelease".split(", ");
 const argv = require("yargs")
+	.alias("g", "github")
+	.describe("g", "release only to github")
 	.alias("t", "templates")
 	.describe("t", "build templates")
 	.alias("v", "version")
@@ -78,29 +80,30 @@ try {
 	}
 
 	const repoInfo = pkg.repository.url.match(/github.com\/([^/]*)\/([^/]*).git/);
-
-	publishRelease({
-		token: process.env.GIT_RELEASE_TOKEN,
-		repo: repoInfo[2],
-		owner: repoInfo[1],
-		tag: `${pkg.version}`,
-		name: `${pkg.name} v${pkg.version}`,
-		assets: settings && settings.assets ? globby.sync(settings.assets) : null
-	}, (error, release) => {
-		if (error) {
-			console.error("release error", error);
-			process.exit(1);
-		}
-		else {
-			if (shell.exec("npm publish").code !== 0) {
-				console.error("npm publish failed");
+	if (!argv.github) {
+		publishRelease({
+			token: process.env.GIT_RELEASE_TOKEN,
+			repo: repoInfo[2],
+			owner: repoInfo[1],
+			tag: `${pkg.version}`,
+			name: `${pkg.name} v${pkg.version}`,
+			assets: settings && settings.assets ? globby.sync(settings.assets) : null
+		}, (error, release) => {
+			if (error) {
+				console.error("release error", error);
 				process.exit(1);
 			}
 			else {
-				console.log(`${pkg.name} v${pkg.version} published!`.green);
+				if (shell.exec("npm publish").code !== 0) {
+					console.error("npm publish failed");
+					process.exit(1);
+				}
+				else {
+					console.log(`${pkg.name} v${pkg.version} published!`.green);
+				}
 			}
-		}
-	});
+		});
+	}
 }
 catch (error) {
 	process.exit(1);
