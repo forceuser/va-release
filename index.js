@@ -80,30 +80,28 @@ try {
 	}
 
 	const repoInfo = pkg.repository.url.match(/github.com\/([^/]*)\/([^/]*).git/);
-	if (!argv.github) {
-		publishRelease({
-			token: process.env.GIT_RELEASE_TOKEN,
-			repo: repoInfo[2],
-			owner: repoInfo[1],
-			tag: `${pkg.version}`,
-			name: `${pkg.name} v${pkg.version}`,
-			assets: settings && settings.assets ? globby.sync(settings.assets) : null
-		}, (error, release) => {
-			if (error) {
-				console.error("release error", error);
+	publishRelease({
+		token: process.env.GIT_RELEASE_TOKEN,
+		repo: repoInfo[2],
+		owner: repoInfo[1],
+		tag: `${pkg.version}`,
+		name: `${pkg.name} v${pkg.version}`,
+		assets: settings && settings.assets ? globby.sync(settings.assets) : null
+	}, (error, release) => {
+		if (error) {
+			console.error("release error", error);
+			process.exit(1);
+			return;
+		}
+		else if (!argv.github) {
+			if (shell.exec("npm publish").code !== 0) {
+				console.error("npm publish failed");
 				process.exit(1);
+				return;
 			}
-			else {
-				if (shell.exec("npm publish").code !== 0) {
-					console.error("npm publish failed");
-					process.exit(1);
-				}
-				else {
-					console.log(`${pkg.name} v${pkg.version} published!`.green);
-				}
-			}
-		});
-	}
+		}
+		console.log(`${pkg.name} v${pkg.version} published!`.green);
+	});
 }
 catch (error) {
 	process.exit(1);
