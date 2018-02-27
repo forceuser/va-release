@@ -71,12 +71,18 @@ if (argv.templates) {
 
 
 fs.writeFileSync("./package.json", `${JSON.stringify(pkg, null, "\t")}\n`, "utf8");
-
+process.on("exit", (code) => {
+	if (code != 0) {
+		restoreVersion();
+	}
+});
 try {
+	const res = shell.exec(`git add --all && git commit -am "${pkg.version} release commit" && git push`);
+
 	if (
-		shell.exec(`git add --all && git commit -am "${pkg.version} release commit" && git push`).code !== 0
+		res.code !== 0
 	) {
-		throw Error("failed to commit");
+		throw Error(res.stderr);
 	}
 
 	const repoInfo = pkg.repository.url.match(/github.com\/([^/]*)\/([^/]*).git/);
@@ -104,10 +110,6 @@ try {
 	});
 }
 catch (error) {
+	console.log(error);
 	process.exit(1);
 }
-process.on("exit", (code) => {
-	if (code != 0) {
-		restoreVersion();
-	}
-});
