@@ -74,7 +74,7 @@ fs.writeFileSync("./package.json", `${JSON.stringify(pkg, null, "\t")}\n`, "utf8
 
 try {
 	if (
-		shell.exec(`git add . && git commit -am "${pkg.version} release commit" && git push`).code !== 0
+		shell.exec(`git add --all && git commit -am "${pkg.version} release commit" && git push`).code !== 0
 	) {
 		throw Error("failed to commit");
 	}
