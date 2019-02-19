@@ -11,7 +11,7 @@ const globby = require("globby");
 const Mustache = require("mustache");
 require("colors");
 
-const bump = "patch, , major, prepatch, preminor, premajor, prerelease".split(", ");
+const bump = "patch, minor, major, prepatch, preminor, premajor, prerelease".split(", ");
 const argv = require("yargs")
 	.alias("g", "github")
 	.describe("g", "release only to github")
