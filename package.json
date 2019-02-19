@@ -21,7 +21,7 @@
 	"scripts": {
 		"test": "eslint .",
 		"fix": "eslint --fix .",
-		"release": "npm run patch-release",
+		"release": "npm run patch-release --",
 		"patch-release": "npm test && ./index.js --version patch",
 		"minor-release": "npm test && ./index.js --version minor",
 		"major-release": "npm test && ./index.js --version major"

@@ -11,7 +11,9 @@ const globby = require("globby");
 const Mustache = require("mustache");
 require("colors");
 
-const bump = "patch, minor, major, prepatch, preminor, premajor, prerelease".split(", ");
+const bump = "patch, minor, major, prepatch, preminor, premajor, prerelease".split(
+	", "
+);
 const argv = require("yargs")
 	.alias("g", "github")
 	.describe("g", "release only to github")
@@ -21,13 +23,17 @@ const argv = require("yargs")
 	.alias("v", "version")
 	.describe("v", "bump the version")
 	.choices("v", bump)
-	.help("help")
-	.argv;
+	.help("help").argv;
 
+console.log("argv.otp", argv.otp);
 
 function restoreVersion () {
 	pkg.version = oldVersion;
-	fs.writeFileSync("./package.json", `${JSON.stringify(pkg, null, "\t")}\n`, "utf8");
+	fs.writeFileSync(
+		"./package.json",
+		`${JSON.stringify(pkg, null, "\t")}\n`,
+		"utf8"
+	);
 }
 
 let currentFileDirectory = process.cwd();
@@ -39,7 +45,10 @@ function buildTemplates (params) {
 				fs.writeFileSync(
 					path.resolve(file.dest, fp),
 					Mustache.render(
-						fs.readFileSync(path.resolve(file.cwd || "./", fp), "utf8"),
+						fs.readFileSync(
+							path.resolve(file.cwd || "./", fp),
+							"utf8"
+						),
 						params || {}
 					)
 				);
@@ -56,13 +65,16 @@ if (argv.version && !argv.templates) {
 	pkg.version = semver.inc(pkg.version, argv.version);
 }
 
-
 buildTemplates({
 	version: pkg.version,
 	timestamp: new Date(),
 	package: pkg,
 	file () {
-		return (fp) => fs.readFileSync(path.resolve(currentFileDirectory || "./", fp), "utf8");
+		return fp =>
+			fs.readFileSync(
+				path.resolve(currentFileDirectory || "./", fp),
+				"utf8"
+			);
 	}
 });
 
@@ -70,45 +82,62 @@ if (argv.templates) {
 	return;
 }
 
-
-fs.writeFileSync("./package.json", `${JSON.stringify(pkg, null, "\t")}\n`, "utf8");
-process.on("exit", (code) => {
+fs.writeFileSync(
+	"./package.json",
+	`${JSON.stringify(pkg, null, "\t")}\n`,
+	"utf8"
+);
+process.on("exit", code => {
 	if (code != 0) {
 		restoreVersion();
 	}
 });
 try {
-	const res = shell.exec(`git add --all && git commit -am "${pkg.version} release commit" && git push`);
+	const res = shell.exec(
+		`git add --all && git commit -am "${
+			pkg.version
+		} release commit" && git push`
+	);
 
-	if (
-		res.code !== 0
-	) {
+	if (res.code !== 0) {
 		throw Error(res.stderr);
 	}
 
-	const repoInfo = pkg.repository.url.match(/github.com\/([^/]*)\/([^/]*).git/);
-	publishRelease({
-		token: process.env.GIT_RELEASE_TOKEN,
-		repo: repoInfo[2],
-		owner: repoInfo[1],
-		tag: `${pkg.version}`,
-		name: `${pkg.name} v${pkg.version}`,
-		assets: settings && settings.assets ? globby.sync(settings.assets) : null
-	}, (error, release) => {
-		if (error) {
-			console.error("release error", error);
-			process.exit(1);
-			return;
-		}
-		else if (!argv.github) {
-			if (shell.exec("npm publish" + (argv.otp ? ` --otp="${argv.otp}"` : "")).code !== 0) {
-				console.error("npm publish failed");
+	const repoInfo = pkg.repository.url.match(
+		/github.com\/([^/]*)\/([^/]*).git/
+	);
+	publishRelease(
+		{
+			token: process.env.GIT_RELEASE_TOKEN,
+			repo: repoInfo[2],
+			owner: repoInfo[1],
+			tag: `${pkg.version}`,
+			name: `${pkg.name} v${pkg.version}`,
+			assets:
+				settings && settings.assets
+					? globby.sync(settings.assets)
+					: null
+		},
+		(error, release) => {
+			if (error) {
+				console.error("release error", error);
 				process.exit(1);
 				return;
 			}
+			else if (!argv.github) {
+				if (
+					shell.exec(
+						"npm publish" + (argv.otp ? ` --otp="${argv.otp}"` : "")
+					).code !== 0
+				) {
+					console.error("npm publish failed");
+					process.exit(1);
+					return;
+				}
+			}
+			console.log(`${pkg.name} v${pkg.version} published!`.green);
 		}
-		console.log(`${pkg.name} v${pkg.version} published!`.green);
-	});
+	);
 }
 catch (error) {
 	console.log(error);
