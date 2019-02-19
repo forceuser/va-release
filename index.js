@@ -141,13 +141,16 @@ try {
 						process.exit(1);
 						return;
 					}
-
+					console.log(`${pkg.name} v${pkg.version} published!`.green);
 					rl.close();
 				});
 
 
 			}
-			console.log(`${pkg.name} v${pkg.version} published!`.green);
+			else {
+				console.log(`${pkg.name} v${pkg.version} published!`.green);
+			}
+
 		}
 	);
 }
