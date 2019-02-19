@@ -17,6 +17,7 @@ const argv = require("yargs")
 	.describe("g", "release only to github")
 	.alias("t", "templates")
 	.describe("t", "build templates")
+	.alias("o", "otp")
 	.alias("v", "version")
 	.describe("v", "bump the version")
 	.choices("v", bump)
@@ -100,7 +101,7 @@ try {
 			return;
 		}
 		else if (!argv.github) {
-			if (shell.exec("npm publish").code !== 0) {
+			if (shell.exec("npm publish" + (argv.otp ? ` --otp="${argv.otp}"` : "")).code !== 0) {
 				console.error("npm publish failed");
 				process.exit(1);
 				return;
