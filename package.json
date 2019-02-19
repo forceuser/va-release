@@ -1,6 +1,6 @@
 {
 	"name": "va-release",
-	"version": "1.0.25",
+	"version": "1.0.27",
 	"description": "release publishing tool for npm and github",
 	"main": "index.js",
 	"bin": "index.js",
