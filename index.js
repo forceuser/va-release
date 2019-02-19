@@ -2,6 +2,8 @@
 
 /* global process */
 
+const readline = require("readline");
+const process = require("process");
 const path = require("path");
 const fs = require("fs-extra");
 const publishRelease = require("publish-release");
@@ -125,15 +127,25 @@ try {
 				return;
 			}
 			else if (!argv.github) {
-				if (
-					shell.exec(
-						"npm publish" + (argv.otp ? ` --otp="${argv.otp}"` : "")
-					).code !== 0
-				) {
-					console.error("npm publish failed");
-					process.exit(1);
-					return;
-				}
+				const rl = readline.createInterface({
+					input: process.stdin,
+					output: process.stdout
+				});
+				rl.question("Input npm otp password or leave it empty:", otp => {
+					if (
+						shell.exec(
+							"npm publish" + (otp ? ` --otp="${otp}"` : "")
+						).code !== 0
+					) {
+						console.error("npm publish failed");
+						process.exit(1);
+						return;
+					}
+
+					rl.close();
+				});
+
+
 			}
 			console.log(`${pkg.name} v${pkg.version} published!`.green);
 		}
