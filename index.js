@@ -105,9 +105,9 @@ process.on("exit", code => {
 });
 try {
 	const res = shell.exec(
-		`git add --all && git commit -am "${
+		`git add --all && (git diff-index --quiet HEAD || git commit -am "${
 			pkg.version
-		} release commit" && git push`
+		} release commit") && git push`
 	);
 
 	if (res.code !== 0) {
