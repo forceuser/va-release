@@ -11,6 +11,8 @@ const semver = require("semver");
 const shell = require("shelljs");
 const globby = require("globby");
 const Mustache = require("mustache");
+const ssri = require("ssri");
+
 require("colors");
 
 const bump = "patch, minor, major, prepatch, preminor, premajor, prerelease".split(
@@ -71,6 +73,13 @@ buildTemplates({
 	version: pkg.version,
 	timestamp: new Date(),
 	package: pkg,
+	ssri () {
+		return fp =>
+			ssri.fromData(fs.readFileSync(
+				path.resolve(currentFileDirectory || "./", fp),
+				"utf8"
+			));
+	},
 	file () {
 		return fp =>
 			fs.readFileSync(
@@ -131,26 +140,28 @@ try {
 					input: process.stdin,
 					output: process.stdout
 				});
-				rl.question("Input npm otp password or leave it empty:", otp => {
-					if (
-						shell.exec(
-							"npm publish" + (otp ? ` --otp="${otp}"` : "")
-						).code !== 0
-					) {
-						console.error("npm publish failed");
-						process.exit(1);
-						return;
+				rl.question(
+					"Input npm otp password or leave it empty:",
+					otp => {
+						if (
+							shell.exec(
+								"npm publish" + (otp ? ` --otp="${otp}"` : "")
+							).code !== 0
+						) {
+							console.error("npm publish failed");
+							process.exit(1);
+							return;
+						}
+						console.log(
+							`${pkg.name} v${pkg.version} published!`.green
+						);
+						rl.close();
 					}
-					console.log(`${pkg.name} v${pkg.version} published!`.green);
-					rl.close();
-				});
-
-
+				);
 			}
 			else {
 				console.log(`${pkg.name} v${pkg.version} published!`.green);
 			}
-
 		}
 	);
 }
