@@ -73,12 +73,11 @@ buildTemplates({
 	version: pkg.version,
 	timestamp: new Date(),
 	package: pkg,
-	ssri () {
-		return fp =>
-			ssri.fromData(fs.readFileSync(
-				path.resolve(currentFileDirectory || "./", fp),
-				"utf8"
-			));
+	ssri (fp) {
+		return ssri.fromData(fs.readFileSync(
+			path.resolve(currentFileDirectory || "./", fp),
+			"utf8"
+		));
 	},
 	file () {
 		return fp =>
