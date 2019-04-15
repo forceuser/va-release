@@ -1,9 +1,9 @@
 {
 	"name": "va-release",
-	"version": "1.0.41",
+	"version": "1.0.42",
 	"description": "release publishing tool for npm and github",
 	"main": "index.js",
-	"bin": "index.js",
+	"bin": "cli.js",
 	"engines": {
 		"node": ">=6.0.0"
 	},
@@ -35,10 +35,10 @@
 		"test": "eslint .",
 		"fix": "eslint --fix .",
 		"release": "npm run patch-release",
-		"nobump-release": "npm test && node ./utils/run.js ./index.js --no-github",
-		"patch-release": "npm test && node ./utils/run.js ./index.js --version patch",
-		"minor-release": "npm test && node ./utils/run.js ./index.js --version minor",
-		"major-release": "npm test && node ./utils/run.js ./index.js --version major"
+		"nobump-release": "cross-env BROWSERSLIST_ENV=modern npm test && node ./utils/run.js ./index.js --no-github",
+		"patch-release": "cross-env BROWSERSLIST_ENV=modern npm test && node ./utils/run.js ./index.js --version patch",
+		"minor-release": "cross-env BROWSERSLIST_ENV=modern npm test && node ./utils/run.js ./index.js --version minor",
+		"major-release": "cross-env BROWSERSLIST_ENV=modern npm test && node ./utils/run.js ./index.js --version major"
 	},
 	"repository": {
 		"type": "git",
@@ -69,6 +69,8 @@
 		"@babel/polyfill": "^7.4.3",
 		"@babel/preset-env": "^7.4.3",
 		"@babel/register": "^7.4.0",
+		"form-data": "^2.3.3",
+		"isomorphic-fetch": "github:forceuser/isomorphic-fetch",
 		"colors": "^1.3.3",
 		"esm": "^3.2.22",
 		"fs-extra": "^7.0.1",

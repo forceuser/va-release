@@ -11,6 +11,8 @@ import Mustache from "mustache";
 import yargs from "yargs";
 import ssri from "ssri";
 import parseGithubUrl from "parse-github-url";
+import fetch from "isomorphic-fetch";
+import FormData from "form-data";
 import "colors";
 
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
@@ -88,40 +90,67 @@ function buildTemplates (params) {
 
 
 
-function doRelease () {
+async function doRelease () {
+	const comment = argv.comment || argv._[0];
 	const oldVersion = pkg.version;
+	const repository = tryEx(() => parseGithubUrl(get(pkg, "repository.url") || "") || {}, {});
 
 	function restoreVersion () {
 		pkg.version = oldVersion;
 		fs.writeFileSync("./package.json", `${JSON.stringify(pkg, null, "\t")}\n`, "utf8");
 	}
 
-	function releaseNpm () {
-		const npmReleaseFlag = !argv.github && !argv["no-npm"];
+	async function publishToGithub (repository, pkg, assets) {
 		try {
-			if (npmReleaseFlag) {
-				const rl = readline.createInterface({
-					input: process.stdin,
-					output: process.stdout,
-				});
-				rl.question(
-					"Input npm otp password or leave it empty:",
-					otp => {
-						if (shell.exec("npm publish" + (otp ? ` --otp="${otp}"` : "")).code !== 0) {
-							console.error("npm publish failed");
-							process.exit(1);
-							return;
-						}
-						console.log(`${pkg.name} v${pkg.version} published!`.green);
-						rl.close();
+			const publishResult = await fetch(`https://api.github.com/repos/${repository.owner}/${repository.name}/releases`, {
+				method: "POST",
+				redirect: "follow",
+				headers: {
+					"authorization": `token ${process.env.GIT_RELEASE_TOKEN}`,
+					"content-type": "application/json",
+				},
+				body: JSON.stringify({
+					"tag_name": `v${pkg.version}`,
+					"target_commitish": "master",
+					"name": "${pkg.name} v${pkg.version}",
+					"body": comment ? comment : null,
+					"draft": false,
+					"prerelease": false,
+				}),
+			})
+				.then(response => response.json());
+			if (assets && assets.length) {
+				await Promise.all(assets.map(async assetPath => {
+					const name = path.basename(assetPath, path.extname(assetPath));
+					console.log("assetPath", assetPath);
+					const body = new FormData();
+					body.append("file", fs.createReadStream(assetPath));
+					try {
+						const response = await fetch(`${publishResult.assets_url}?name=${name}`, {
+							method: "POST",
+							redirect: "follow",
+							headers: {
+								"authorization": `token ${process.env.GIT_RELEASE_TOKEN}`,
+							},
+							body,
+						});
 					}
-				);
+					catch (error) {
+						console.log("asset upload error!".red);
+					}
+				}));
+				console.log("github release assets uploading is finithed!");
 			}
 		}
-		finally {
-			//
+		catch (error) {
+			console.log("error while publishing to github!".red);
 		}
-		return npmReleaseFlag;
+	}
+
+	function isGitRepo () {
+		const res = fs.existsSync("./.git");
+		console.log("isGitRepo", res);
+		return res;
 	}
 
 	let restoreVersionFlag = false;
@@ -142,7 +171,7 @@ function doRelease () {
 			version: pkg.version,
 			timestamp: new Date(),
 			package: pkg,
-			repository: tryEx(() => parseGithubUrl(get(pkg, "repository.url") || "") || {}, {}),
+			repository,
 			ssri () {
 				return fp =>
 					ssri.fromData(fs.readFileSync(
@@ -173,44 +202,67 @@ function doRelease () {
 	}
 
 	try {
-		const comment = argv.comment || argv._[0];
+
 		if (!argv["no-git"]) {
-			const res = shell.exec(`git add --all && (git diff-index --quiet HEAD || git commit -am "${pkg.version} - ${comment ? comment : `release commit`}") && git push`);
-			if (res.code !== 0) {
-				throw Error(res.stderr);
+			if (!isGitRepo()) {
+				const response = await fetch(`https://api.github.com/user/repos`, {
+					method: "POST",
+					redirect: "follow",
+					headers: {
+						"authorization": `token ${process.env.GIT_RELEASE_TOKEN}`,
+						"content-type": "application/json",
+					},
+					body: JSON.stringify({"name": "va-create"}),
+				})
+					.then(response => response.json());
+
+				const res = shell.exec(`git init && git add --all && git commit -am "${pkg.version} - ${comment ? comment : `release commit`}" && git remote add origin ${response.ssh_url} && git push -u origin master`);
+				if (res.code !== 0) {
+					throw Error(res.stderr);
+				}
 			}
+			else {
+				const res = shell.exec(`git add --all && (git diff-index --quiet HEAD || git commit -am "${pkg.version} - ${comment ? comment : `release commit`}") && git push`);
+				if (res.code !== 0) {
+					throw Error(res.stderr);
+				}
+			}
+
+
 		}
 
 		restoreVersionFlag = false;
-		const repoInfo = pkg.repository.url.match(/github.com\/([^/]*)\/([^/]*).git/);
-
 		if (!argv["no-github"]) {
-			publishRelease(
-				{
-					token: releaseToken,
-					repo: repoInfo[2],
-					owner: repoInfo[1],
-					tag: `${pkg.version}`,
-					name: `${pkg.name} v${pkg.version}`,
-					assets:
-						settings && settings.assets
-							? globby.sync(settings.assets)
-							: null,
-				},
-				error => {
-					if (error) {
-						console.error("release error", error);
+			try {
+				await publishToGithub(repository, pkg, settings && settings.assets ? globby.sync(settings.assets) : []);
+				console.log(`${pkg.name} v${pkg.version} published to github!`.green);
+			}
+			catch (error) {
+				if (error) {
+					console.error("release error", error);
+					process.exit(1);
+					return;
+				}
+			}
+		}
+
+		if (!argv.github && !argv["no-npm"]) {
+			const rl = readline.createInterface({
+				input: process.stdin,
+				output: process.stdout,
+			});
+			rl.question(
+				"Input npm otp password or leave it empty:",
+				otp => {
+					if (shell.exec("npm publish" + (otp ? ` --otp="${otp}"` : "")).code !== 0) {
+						console.error("npm publish failed");
 						process.exit(1);
 						return;
 					}
-					if (!releaseNpm()) {
-						console.log(`${pkg.name} v${pkg.version} published!`.green);
-					}
+					console.log(`${pkg.name} v${pkg.version} published to npm!`.green);
+					rl.close();
 				}
 			);
-		}
-		else {
-			releaseNpm();
 		}
 	}
 	catch (error) {
