@@ -27,6 +27,8 @@ const argv = yargs
 	.choices("v", bump)
 	.help("help").argv;
 
+console.log("argv", argv);
+
 let currentFileDirectory = process.cwd();
 function buildTemplates (params) {
 	if (settings && settings.files && settings.files.length) {
