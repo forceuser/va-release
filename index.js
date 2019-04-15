@@ -101,6 +101,7 @@ async function doRelease () {
 	}
 
 	async function publishToGithub (repository, pkg, assets) {
+		console.log(publishToGithub, repository, assets);
 		try {
 			const publishResult = await fetch(`https://api.github.com/repos/${repository.owner}/${repository.name}/releases`, {
 				method: "POST",
@@ -139,7 +140,7 @@ async function doRelease () {
 						console.log("asset upload error!".red);
 					}
 				}));
-				console.log("github release assets uploading is finithed!");
+				console.log("github release assets uploading is finished!");
 			}
 		}
 		catch (error) {
