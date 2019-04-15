@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import process from "process";
 import readline from "readline";
+import mime from "mime";
 import path from "path";
 import fs from "fs-extra";
 import publishRelease from "publish-release";
@@ -126,14 +127,16 @@ async function doRelease () {
 				await Promise.all(assets.map(async assetPath => {
 					const name = path.basename(assetPath, path.extname(assetPath));
 					console.log("assetPath", assetPath);
-					const body = new FormData();
-					body.append("file", fs.createReadStream(assetPath));
+					const body = fs.createReadStream(assetPath);
+					const stats = fs.statSync(assetPath);
 					try {
 						const response = await fetch(`${publishResult.upload_url.replace(/\{.*?\}/ig, "")}?name=${name}`, {
 							method: "POST",
 							redirect: "follow",
 							headers: {
 								"authorization": `token ${process.env.GIT_RELEASE_TOKEN}`,
+								"content-type": mime.getType(assetPath),
+								"content-length": stats.size,
 							},
 							body,
 						});

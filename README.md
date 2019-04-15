@@ -2,7 +2,7 @@
 
 Simple tool for publishing releases to npm and github
 
-latest version: 1.0.48
+latest version: 1.0.49
 
 ## Installation
 
