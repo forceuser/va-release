@@ -12,11 +12,25 @@ import yargs from "yargs";
 import ssri from "ssri";
 import "colors";
 
+const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
+const settings = pkg["va-release"];
+
 const bump = "patch, minor, major, prepatch, preminor, premajor, prerelease".split(", ");
 const argv = yargs(process.argv.slice(3))
 	.alias("g", "github")
 	.describe("g", "release only to github")
+	.boolean("g")
+	.describe("no-templates", "disable templates build stage")
+	.boolean("no-templates")
+	.describe("no-git", "disable git push")
+	.boolean("no-git")
+	.describe("no-github", "disable github release")
+	.boolean("no-github")
+	.describe("no-npm", "disable npm release")
+	.boolean("no-npm")
+	.describe("token", "git release token")
 	.alias("t", "templates")
+	.boolean("t")
 	.describe("t", "build templates")
 	.alias("o", "otp")
 	.alias("c", "comment")
@@ -48,106 +62,139 @@ function buildTemplates (params) {
 	}
 }
 
-const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
-const oldVersion = pkg.version;
-const settings = pkg["va-release"];
 
-function restoreVersion () {
-	pkg.version = oldVersion;
-	fs.writeFileSync("./package.json", `${JSON.stringify(pkg, null, "\t")}\n`, "utf8");
-}
 
-if (argv.version && !argv.templates) {
-	pkg.version = semver.inc(pkg.version, argv.version);
-}
+function doRelease () {
+	const oldVersion = pkg.version;
 
-buildTemplates({
-	version: pkg.version,
-	timestamp: new Date(),
-	package: pkg,
-	ssri () {
-		return fp =>
-			ssri.fromData(fs.readFileSync(
-				path.resolve(currentFileDirectory || "./", fp),
-				"utf8"
-			));
-	},
-	file () {
-		return fp =>
-			fs.readFileSync(
-				path.resolve(currentFileDirectory || "./", fp),
-				"utf8"
-			);
-	},
-});
-
-fs.writeFileSync(
-	"./package.json",
-	`${JSON.stringify(pkg, null, "\t")}\n`,
-	"utf8"
-);
-process.on("exit", code => {
-	if (code != 0) {
-		restoreVersion();
+	function restoreVersion () {
+		pkg.version = oldVersion;
+		fs.writeFileSync("./package.json", `${JSON.stringify(pkg, null, "\t")}\n`, "utf8");
 	}
-});
 
+	function releaseNpm () {
+		const npmReleaseFlag = !argv.github && !argv["no-npm"];
+		try {
+			if (npmReleaseFlag) {
+				const rl = readline.createInterface({
+					input: process.stdin,
+					output: process.stdout,
+				});
+				rl.question(
+					"Input npm otp password or leave it empty:",
+					otp => {
+						if (shell.exec("npm publish" + (otp ? ` --otp="${otp}"` : "")).code !== 0) {
+							console.error("npm publish failed");
+							process.exit(1);
+							return;
+						}
+						console.log(`${pkg.name} v${pkg.version} published!`.green);
+						rl.close();
+					}
+				);
+			}
+		}
+		finally {
+			//
+		}
+		return npmReleaseFlag;
+	}
 
-if (!argv.templates) {
+	let restoreVersionFlag = false;
+	if (argv.version && !argv.templates) {
+		pkg.version = semver.inc(pkg.version, argv.version);
+		fs.writeFileSync("./package.json", `${JSON.stringify(pkg, null, "\t")}\n`, "utf8");
+		restoreVersionFlag = true;
+	}
+
+	process.on("exit", code => {
+		if (code != 0 && restoreVersionFlag) {
+			restoreVersion();
+		}
+	});
+
+	if (!argv["no-templates"]) {
+		buildTemplates({
+			version: pkg.version,
+			timestamp: new Date(),
+			package: pkg,
+			ssri () {
+				return fp =>
+					ssri.fromData(fs.readFileSync(
+						path.resolve(currentFileDirectory || "./", fp),
+						"utf8"
+					));
+			},
+			file () {
+				return fp =>
+					fs.readFileSync(
+						path.resolve(currentFileDirectory || "./", fp),
+						"utf8"
+					);
+			},
+		});
+	}
+
+	if (argv.templates) {
+		return;
+	}
+
+	restoreVersionFlag = true;
+	const releaseToken = argv.token || process.env.GIT_RELEASE_TOKEN;
+	if (!argv["no-github"] && !releaseToken) {
+		console.log("Error!".red, "Please specify github release token via " + "--token".cyan + " argument or " + "GIT_RELEASE_TOKEN".cyan + " enviroment variable.");
+		process.exit(1);
+		return;
+	}
+
 	try {
 		const comment = argv.comment || argv._[0];
-		const res = shell.exec(`git add --all && (git diff-index --quiet HEAD || git commit -am "${pkg.version} - ${comment ? comment : `release commit`}") && git push`);
-		if (res.code !== 0) {
-			throw Error(res.stderr);
+		if (!argv["no-git"]) {
+			const res = shell.exec(`git add --all && (git diff-index --quiet HEAD || git commit -am "${pkg.version} - ${comment ? comment : `release commit`}") && git push`);
+			if (res.code !== 0) {
+				throw Error(res.stderr);
+			}
 		}
+
+		restoreVersionFlag = false;
 		const repoInfo = pkg.repository.url.match(/github.com\/([^/]*)\/([^/]*).git/);
 
-		publishRelease(
-			{
-				token: process.env.GIT_RELEASE_TOKEN,
-				repo: repoInfo[2],
-				owner: repoInfo[1],
-				tag: `${pkg.version}`,
-				name: `${pkg.name} v${pkg.version}`,
-				assets:
-					settings && settings.assets
-						? globby.sync(settings.assets)
-						: null,
-			},
-			error => {
-				if (error) {
-					console.error("release error", error);
-					process.exit(1);
-					return;
+		if (!argv["no-github"]) {
+			publishRelease(
+				{
+					token: releaseToken,
+					repo: repoInfo[2],
+					owner: repoInfo[1],
+					tag: `${pkg.version}`,
+					name: `${pkg.name} v${pkg.version}`,
+					assets:
+						settings && settings.assets
+							? globby.sync(settings.assets)
+							: null,
+				},
+				error => {
+					if (error) {
+						console.error("release error", error);
+						process.exit(1);
+						return;
+					}
+					if (!releaseNpm()) {
+						console.log(`${pkg.name} v${pkg.version} published!`.green);
+					}
 				}
-				else if (!argv.github) {
-					const rl = readline.createInterface({
-						input: process.stdin,
-						output: process.stdout,
-					});
-					rl.question(
-						"Input npm otp password or leave it empty:",
-						otp => {
-							if (shell.exec("npm publish" + (otp ? ` --otp="${otp}"` : "")).code !== 0) {
-								console.error("npm publish failed");
-								process.exit(1);
-								return;
-							}
-							console.log(`${pkg.name} v${pkg.version} published!`.green);
-							rl.close();
-						}
-					);
-				}
-				else {
-					console.log(`${pkg.name} v${pkg.version} published!`.green);
-				}
-			}
-		);
+			);
+		}
+		else {
+			releaseNpm();
+		}
 	}
 	catch (error) {
 		console.log(error);
 		process.exit(1);
 	}
 }
+
+doRelease();
+
 
 
