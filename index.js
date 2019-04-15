@@ -10,6 +10,7 @@ import globby from "globby";
 import Mustache from "mustache";
 import yargs from "yargs";
 import ssri from "ssri";
+import parseGithubUrl from "parse-github-url";
 import "colors";
 
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
@@ -42,6 +43,29 @@ const argv = yargs(process.argv.slice(3))
 	.help("help").argv;
 
 let currentFileDirectory = process.cwd();
+
+const tryEx = (fn, def) => {
+	try { return fn(); }
+	catch (error) { return def; }
+};
+
+function get (src, path) {
+	const p = path.replace(/["']/g, "").replace(/\[/g, ".").replace(/\]/g, "").split(".");
+	let c = src;
+	if (p[0]) {
+		for (let i = 0; i < p.length; i++) {
+			if (i === p.length - 1) {
+				return c[p[i]];
+			}
+			c = c[p[i]];
+			if (c == null || typeof c !== "object") {
+				return undefined;
+			}
+		}
+	}
+	return c;
+}
+
 function buildTemplates (params) {
 	if (settings && settings.files && settings.files.length) {
 		settings.files.forEach(file => {
@@ -118,6 +142,7 @@ function doRelease () {
 			version: pkg.version,
 			timestamp: new Date(),
 			package: pkg,
+			repository: tryEx(() => parseGithubUrl(get(pkg, "repository.url") || "") || {}, {}),
 			ssri () {
 				return fp =>
 					ssri.fromData(fs.readFileSync(
