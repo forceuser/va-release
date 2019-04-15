@@ -1,12 +1,8 @@
 module.exports = {
-    "parser": "babel-eslint",
+	"parser": "babel-eslint",
     "parserOptions": {
         "sourceType": "module"
     },
-    "plugins": [
-        "babel",
-        "import"
-    ],
     "extends": [
         "eslint:recommended",
     ],
@@ -16,26 +12,15 @@ module.exports = {
         "es6": true
     },
     "settings": {
-        "import/external-module-folders": ["node_modules", "jspm_packages"],
-        "import/resolve": {
-            "moduleDirectory": [
-                "node_modules",
-                "."
-            ]
-        },
-        "import/resolver": {
-            "node": true
-        }
     },
     "rules": {
 		// BASIC
 		"require-yield": 0,
 		"no-this-before-super": 2,
-
 		// STYLE
 		"indent": [2, "tab", {"SwitchCase": 1}],
 		"eol-last": 2,
-		"linebreak-style": ["error", "unix"],
+		// "linebreak-style": ["error", "unix"],
 
 		"quotes": ["error", "double", {"allowTemplateLiterals": true}],
         "semi": ["error", "always"],
@@ -55,6 +40,13 @@ module.exports = {
             "before": false,
             "after": true
         }],
+        "comma-dangle": ["error", {
+            "arrays": "always-multiline",
+            "objects": "always-multiline",
+            "imports": "never",
+            "exports": "never",
+            "functions": "ignore"
+        }],
 		"space-infix-ops": 2,
         "space-in-parens": [2, "never"],
 		"space-before-blocks": [2, "always"],
@@ -65,7 +57,8 @@ module.exports = {
         }],
 		"spaced-comment": ["error", "always"],
 		"keyword-spacing": [2, {"before": true, "after": true}],
-
+        "arrow-spacing": ["error", { "before": true, "after": true }],
+		"object-curly-spacing": [2, "never"],
         //======================================================================
 
 		"no-useless-rename": [2, {
@@ -91,7 +84,7 @@ module.exports = {
 		"no-self-compare": 2,
 		"no-cond-assign": 1,
 		"no-useless-concat": 2,
-		"no-useless-escape": 2,
+		"no-useless-escape": 0,
 		// "no-use-before-define": 2,
 		"no-implicit-coercion": 0,
 		"no-new-func": 0,
@@ -106,37 +99,6 @@ module.exports = {
         "prefer-arrow-callback": 1,
 
 		//======================================================================
-        "babel/new-cap": [2, {
-            "newIsCap": true,
-            "capIsNew": false
-        }],
-        "babel/object-curly-spacing": [2, "never"],
         "object-shorthand": 1,
-        //======================================================================
-        // disabled because of https://github.com/benmosher/eslint-plugin-import/issues/268
-        // "import/default": 2,
-        "import/export": 2,
-        // "import/extensions": [2, {
-        //     "js": "never",
-        //     "json": "never",
-        //     "jsx": "never"
-        // }],
-        "import/imports-first": 2,
-        // disabled because of https://github.com/benmosher/eslint-plugin-import/issues/268
-        // "import/named": 2,
-        "import/namespace": 2,
-        // "import/newline-after-import": 2,
-        "import/no-amd": 2,
-        // enable this sometime in the future when Node.js has ES2015 module support
-        // "import/no-commonjs": 2,
-        // looks useful, but too unstable at the moment
-        // "import/no-deprecated": 2,
-        "import/no-extraneous-dependencies": 0,
-        "import/no-mutable-exports": 2,
-        "import/no-named-as-default-member": 2,
-        "import/no-named-as-default": 2,
-        // disabled because of https://github.com/benmosher/eslint-plugin-import/issues/275
-        // "import/no-unresolved": [2, {commonjs: true}],
-        "import/order": 2
     }
 };
