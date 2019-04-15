@@ -1,6 +1,6 @@
 {
 	"name": "va-release",
-	"version": "1.0.35",
+	"version": "1.0.36",
 	"description": "release publishing tool for npm and github",
 	"main": "index.js",
 	"bin": "index.js",
@@ -33,10 +33,10 @@
 		"init": "rm -rf ./node-modules/ > /dev/null && npm i",
 		"test": "eslint .",
 		"fix": "eslint --fix .",
-		"release": "npm run patch-release -- --comment",
-		"patch-release": "npm test && node ./utils/run.js -s ./index.js -- --version patch",
-		"minor-release": "npm test && node ./utils/run.js -s ./index.js -- --version minor",
-		"major-release": "npm test && node ./utils/run.js -s ./index.js -- --version major"
+		"release": "npm run patch-release",
+		"patch-release": "npm test && node ./utils/run.js ./index.js --version patch",
+		"minor-release": "npm test && node ./utils/run.js ./index.js --version minor",
+		"major-release": "npm test && node ./utils/run.js ./index.js --version major"
 	},
 	"repository": {
 		"type": "git",

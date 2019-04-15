@@ -16,15 +16,15 @@ if (process.env.NODE_ENV === "test") {
 }
 
 function getArg (args) {
-	const idx = process.argv.findIndex(i => [].concat(args).some(v => v === i));
+	const idx = process.argv.findIndex((i, idx) => [].concat(args).some(v => typeof v === "string" ? v === i : v === idx));
 	if (idx >= 0) {
 		return process.argv[idx + 1];
 	}
 }
 
-const script = getArg(["-s", "--script"]);
+const script = getArg(["-s", "--script", 1]);
 if (script) {
-	module.exports = importModule(path.resolve(process.cwd(), getArg(["-s", "--script"])));
+	module.exports = importModule(path.resolve(process.cwd(), script));
 }
 else {
 	module.exports = importModule;

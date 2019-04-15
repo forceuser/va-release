@@ -12,9 +12,8 @@ import yargs from "yargs";
 import ssri from "ssri";
 import "colors";
 
-
 const bump = "patch, minor, major, prepatch, preminor, premajor, prerelease".split(", ");
-const argv = yargs
+const argv = yargs(process.argv.slice(3))
 	.alias("g", "github")
 	.describe("g", "release only to github")
 	.alias("t", "templates")
@@ -25,9 +24,8 @@ const argv = yargs
 	.alias("v", "version")
 	.describe("v", "bump the version")
 	.choices("v", bump)
+	.version(false)
 	.help("help").argv;
-
-console.log("argv", argv);
 
 let currentFileDirectory = process.cwd();
 function buildTemplates (params) {
@@ -97,7 +95,8 @@ process.on("exit", code => {
 
 if (!argv.templates) {
 	try {
-		const res = shell.exec(`git add --all && (git diff-index --quiet HEAD || git commit -am "${pkg.version} - ${argv.comment ? argv.comment : `release commit`}") && git push`);
+		const comment = argv.comment || argv._[0];
+		const res = shell.exec(`git add --all && (git diff-index --quiet HEAD || git commit -am "${pkg.version} - ${comment ? comment : `release commit`}") && git push`);
 		if (res.code !== 0) {
 			throw Error(res.stderr);
 		}
