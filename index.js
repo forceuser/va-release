@@ -113,7 +113,7 @@ async function doRelease () {
 				body: JSON.stringify({
 					"tag_name": `v${pkg.version}`,
 					"target_commitish": "master",
-					"name": "${pkg.name} v${pkg.version}",
+					"name": `${pkg.name} v${pkg.version}`,
 					"body": comment ? comment : null,
 					"draft": false,
 					"prerelease": false,
