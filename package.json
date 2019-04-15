@@ -33,7 +33,7 @@
 		"init": "rm -rf ./node-modules/ > /dev/null && npm i",
 		"test": "eslint .",
 		"fix": "eslint --fix .",
-		"release": "npm run patch-release --",
+		"release": "npm run patch-release -- -c",
 		"patch-release": "npm test && node ./utils/run.js -s ./index.js -- --version patch",
 		"minor-release": "npm test && node ./utils/run.js -s ./index.js -- --version minor",
 		"major-release": "npm test && node ./utils/run.js -s ./index.js -- --version major"
