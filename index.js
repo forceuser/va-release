@@ -120,6 +120,8 @@ async function doRelease () {
 				}),
 			})
 				.then(response => response.json());
+
+			console.log("publishResult", publishResult);
 			if (assets && assets.length) {
 				await Promise.all(assets.map(async assetPath => {
 					const name = path.basename(assetPath, path.extname(assetPath));
