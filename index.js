@@ -4,7 +4,6 @@ import readline from "readline";
 import mime from "mime";
 import path from "path";
 import fs from "fs-extra";
-import publishRelease from "publish-release";
 import semver from "semver";
 import shell from "shelljs";
 import globby from "globby";
@@ -13,7 +12,6 @@ import yargs from "yargs";
 import ssri from "ssri";
 import parseGithubUrl from "parse-github-url";
 import fetch from "isomorphic-fetch";
-import FormData from "form-data";
 import "colors";
 
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
@@ -125,7 +123,7 @@ async function doRelease () {
 			console.log("publishResult", publishResult);
 			if (assets && assets.length) {
 				await Promise.all(assets.map(async assetPath => {
-					const name = path.basename(assetPath, path.extname(assetPath));
+					const name = path.basename(assetPath);
 					console.log("assetPath", assetPath);
 					const body = fs.createReadStream(assetPath);
 					const stats = fs.statSync(assetPath);
@@ -141,13 +139,15 @@ async function doRelease () {
 							body,
 						});
 
-						console.log("asset upload", name, response);
+						if (response.status !== 201) {
+							throw new Error("failed to upload");
+						}
 					}
 					catch (error) {
-						console.log("asset upload error!".red);
+						console.log(`${"Error!".red} asset ${assetPath.cyan} not uploaded`);
 					}
 				}));
-				console.log("github release assets uploading is finished!");
+				console.log("github release assets upload if finished!");
 			}
 		}
 		catch (error) {

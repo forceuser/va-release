@@ -1,6 +1,6 @@
 {
 	"name": "va-release",
-	"version": "1.0.49",
+	"version": "1.1.0",
 	"description": "release publishing tool for npm and github",
 	"main": "index.js",
 	"bin": "cli.js",
@@ -35,11 +35,11 @@
 		"update": "npx npm-check-updates -u && npm run init",
 		"test": "eslint .",
 		"fix": "eslint --fix .",
-		"release": "npm run patch-release",
-		"nobump-release": "cross-env BROWSERSLIST_ENV=modern npm test && node ./utils/run.js ./index.js --no-github",
-		"patch-release": "cross-env BROWSERSLIST_ENV=modern npm test && node ./utils/run.js ./index.js --version patch",
-		"minor-release": "cross-env BROWSERSLIST_ENV=modern npm test && node ./utils/run.js ./index.js --version minor",
-		"major-release": "cross-env BROWSERSLIST_ENV=modern npm test && node ./utils/run.js ./index.js --version major"
+		"release": "npm run release-patch",
+		"release-nobump": "cross-env BROWSERSLIST_ENV=modern npm test && node ./utils/run.js ./index.js --no-github",
+		"release-patch": "cross-env BROWSERSLIST_ENV=modern npm test && node ./utils/run.js ./index.js --version patch",
+		"release-minor": "cross-env BROWSERSLIST_ENV=modern npm test && node ./utils/run.js ./index.js --version minor",
+		"release-major": "cross-env BROWSERSLIST_ENV=modern npm test && node ./utils/run.js ./index.js --version major"
 	},
 	"repository": {
 		"type": "git",
@@ -80,7 +80,6 @@
 		"module-alias": "^2.2.0",
 		"mustache": "^3.0.1",
 		"parse-github-url": "^1.0.2",
-		"publish-release": "^1.6.0",
 		"semver": "^6.0.0",
 		"shelljs": "^0.8.3",
 		"ssri": "^6.0.1",
