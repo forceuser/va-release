@@ -129,7 +129,7 @@ async function doRelease () {
 					const body = new FormData();
 					body.append("file", fs.createReadStream(assetPath));
 					try {
-						const response = await fetch(`${publishResult.assets_url}?name=${name}`, {
+						const response = await fetch(`${publishResult.upload_url.replace(/\{.*?\}/ig, "")}?name=${name}`, {
 							method: "POST",
 							redirect: "follow",
 							headers: {
