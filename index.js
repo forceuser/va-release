@@ -92,7 +92,7 @@ function buildTemplates (params) {
 async function doRelease () {
 	const comment = argv.comment || argv._[0];
 	const oldVersion = pkg.version;
-	const repository = tryEx(() => parseGithubUrl(get(pkg, "repository.url") || "") || {}, {});
+	const repository = pkg.repository ? tryEx(() => parseGithubUrl(get(pkg, "repository.url") || "") || {}, {}) : {name: pkg.name, owner: get(pkg, "va-release.owner")};
 
 	function restoreVersion () {
 		pkg.version = oldVersion;
@@ -235,8 +235,6 @@ async function doRelease () {
 					throw Error(res.stderr);
 				}
 			}
-
-
 		}
 
 		restoreVersionFlag = false;
