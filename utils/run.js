@@ -28,8 +28,7 @@ const findValue = (arr, fn) => {
 };
 
 function getArg (items) {
-	const fidx = process.argv.indexOf(process.mainModule.filename);
-	const argv = process.argv.slice(fidx + 1, process.argv.length);
+	const argv = process.argv.slice(2, process.argv.length);
 	let i = 0;
 	let indexed = 0;
 	const params = {};

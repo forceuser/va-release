@@ -88,7 +88,21 @@ function buildTemplates (params) {
 	}
 }
 
-
+async function readln (question) {
+	let result;
+	const rl = readline.createInterface({
+		input: process.stdin,
+		output: process.stdout,
+		terminal: true,
+	});
+	try {
+		result = await rl.questionAsync(question);
+	}
+	finally {
+		rl.close();
+	}
+	return result;
+}
 
 async function doRelease () {
 	const comment = argv.comment || argv._[0];
@@ -254,12 +268,7 @@ async function doRelease () {
 		}
 
 		if (!argv.github && !argv["no-npm"]) {
-			const rl = readline.createInterface({
-				input: process.stdin,
-				output: process.stdout,
-				terminal: true,
-			});
-			const otp = await rl.questionAsync("Input npm otp password or leave it empty:");
+			const otp = await readln("Input npm otp password or leave it empty: ");
 			if (shell.exec("npm publish" + (otp ? ` --otp="${otp}"` : "")).code !== 0) {
 				console.error("npm publish failed");
 				process.exit(1);
