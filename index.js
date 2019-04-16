@@ -98,6 +98,7 @@ async function doRelease () {
 	if (!pkg["va-release"].library) {
 		pkg["va-release"].library = camelcase(pkg.name);
 	}
+
 	function restoreVersion () {
 		pkg.version = oldVersion;
 		fs.writeFileSync("./package.json", `${JSON.stringify(pkg, null, "\t")}\n`, "utf8");
