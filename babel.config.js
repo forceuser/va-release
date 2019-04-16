@@ -1,7 +1,11 @@
 module.exports = function (api) {
 	const config = {
 		"presets": [
-			["@babel/preset-env", {"modules": false, "useBuiltIns": "usage"}],
+			["@babel/preset-env", {
+				"modules": false,
+				"useBuiltIns": "usage",
+				"corejs": "3",
+			}],
 		],
 		"plugins": [
 			"@babel/plugin-syntax-dynamic-import",
