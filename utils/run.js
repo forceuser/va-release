@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* global __dirname */
+/* global __dirname, __filename */
 const process = require("process");
 const path = require("path");
 const fs = require("fs-extra");
@@ -17,18 +17,44 @@ if (process.env.NODE_ENV === "test") {
 	});
 }
 
-function getArg (args) {
-	const idx = process.argv.findIndex((i, idx) => [].concat(args).some(v => typeof v === "string" ? v === i : v === idx));
-	if (idx >= 0) {
-		return process.argv[idx + 1];
+
+const findValue = (arr, fn) => {
+	for (let i = 0; i < arr.length; i++) {
+		const res = fn(arr[i], i);
+		if (res != null) {
+			return res;
+		}
 	}
+};
+
+function getArg (items) {
+	const fidx = process.argv.indexOf(__filename);
+	const argv = process.argv.slice(fidx + 1, process.argv.length);
+	console.log("argv", argv);
+	let i = 0;
+	let indexed = 0;
+	const params = {};
+	while (i < argv.length) {
+		const arg = argv[i];
+		if (arg.match(/^-{1,2}[^\s]+/)) {
+			params[arg.replace(/^-{1,2}/, "")] = argv[i + 1];
+			i += 2;
+		}
+		else {
+			params[indexed] = arg;
+			indexed++;
+			i++;
+		}
+	}
+	console.log("params", params);
+	return findValue(items, item => params[item]);
 }
 
-const script = getArg(["-s", "--script", 1]);
+const script = getArg(["s", "script", 0]);
+console.log("script", script);
 if (script) {
 	module.exports = importModule(path.resolve(process.cwd(), script));
 }
 else {
 	module.exports = importModule;
 }
-
