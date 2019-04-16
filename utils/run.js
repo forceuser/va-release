@@ -1,11 +1,13 @@
 #!/usr/bin/env node
+/* global __dirname */
 const process = require("process");
 const path = require("path");
 const fs = require("fs-extra");
 const importModule = require("esm")(module, {cjs: true, mode: "auto", cache: false}, {cache: false});
-require("@babel/register");
-require("@babel/polyfill");
-require("module-alias/register");
+
+importModule("@babel/register")({root: path.resolve(__dirname, "..")});
+importModule("@babel/polyfill");
+importModule("module-alias/register");
 
 if (process.env.NODE_ENV === "test") {
 	const tape = importModule("tape");
