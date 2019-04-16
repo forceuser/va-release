@@ -3,6 +3,8 @@
 const process = require("process");
 const path = require("path");
 const fs = require("fs-extra");
+const mainModule = require.main.filename;
+const isMain = mainModule === __filename;
 const importModule = require("esm")(module, {cjs: true, mode: "auto", cache: false}, {cache: false});
 
 importModule("@babel/register")({root: path.resolve(__dirname, "..")});
@@ -47,7 +49,8 @@ function getArg (items) {
 	return findValue(items, item => params[item]);
 }
 
-const script = getArg(["s", "script", 0]);
+const script = getArg(["s", "script", ...(isMain ? [0] : [])]);
+
 if (script) {
 	module.exports = importModule(path.resolve(process.cwd(), script));
 }
