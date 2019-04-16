@@ -105,7 +105,6 @@ async function doRelease () {
 	}
 
 	async function publishToGithub (repository, pkg, assets) {
-		console.log("publishToGithub", assets);
 		try {
 			const publishResult = await fetch(`https://api.github.com/repos/${repository.owner}/${repository.name}/releases`, {
 				method: "POST",
@@ -125,11 +124,10 @@ async function doRelease () {
 			})
 				.then(response => response.json());
 
-			console.log("publishResult", publishResult);
 			if (assets && assets.length) {
 				await Promise.all(assets.map(async assetPath => {
 					const name = path.basename(assetPath);
-					console.log("assetPath", assetPath);
+
 					const body = fs.createReadStream(assetPath);
 					const stats = fs.statSync(assetPath);
 					try {
@@ -161,9 +159,7 @@ async function doRelease () {
 	}
 
 	function isGitRepo () {
-		const res = fs.existsSync("./.git");
-		console.log("isGitRepo", res);
-		return res;
+		return fs.existsSync("./.git");
 	}
 
 	let restoreVersionFlag = false;
