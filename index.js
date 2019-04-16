@@ -19,7 +19,7 @@ const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
 const settings = pkg["va-release"];
 
 const bump = "patch, minor, major, prepatch, preminor, premajor, prerelease".split(", ");
-const argv = yargs(process.argv.slice(3))
+const argv = yargs(process.argv.slice(2))
 	.alias("g", "github")
 	.describe("g", "release only to github")
 	.boolean("g")
