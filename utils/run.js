@@ -7,8 +7,8 @@ const mainModule = require.main.filename;
 const isMain = mainModule === __filename;
 const importModule = require("esm")(module, {cjs: true, mode: "auto", cache: false}, {cache: false});
 
-importModule("@babel/register")({root: path.resolve(__dirname, "..")});
-importModule("@babel/polyfill");
+// importModule("@babel/register")({root: path.resolve(__dirname, "..")});
+// importModule("@babel/polyfill");
 importModule("module-alias/register");
 
 if (process.env.NODE_ENV === "test") {

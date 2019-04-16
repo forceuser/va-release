@@ -104,7 +104,7 @@ async function readln (question) {
 	return result;
 }
 
-async function doRelease () {
+async function main () {
 	const comment = argv.comment || argv._[0];
 	const oldVersion = pkg.version;
 	const repository = pkg.repository ? tryEx(() => parseGithubUrl(get(pkg, "repository.url") || "") || {}, {}) : {name: pkg.name, owner: get(pkg, "va-release.owner")};
@@ -283,7 +283,7 @@ async function doRelease () {
 	}
 }
 
-doRelease();
+main();
 
 
 
