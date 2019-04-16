@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import process from "process";
-import readline from "readline";
+import readline from "readline-promise";
 import mime from "mime";
 import path from "path";
 import fs from "fs-extra";
@@ -257,19 +257,15 @@ async function doRelease () {
 			const rl = readline.createInterface({
 				input: process.stdin,
 				output: process.stdout,
+				terminal: true,
 			});
-			rl.question(
-				"Input npm otp password or leave it empty:",
-				otp => {
-					if (shell.exec("npm publish" + (otp ? ` --otp="${otp}"` : "")).code !== 0) {
-						console.error("npm publish failed");
-						process.exit(1);
-						return;
-					}
-					console.log(`${pkg.name} v${pkg.version} published to npm!`.green);
-					rl.close();
-				}
-			);
+			const otp = await rl.questionAsync("Input npm otp password or leave it empty:");
+			if (shell.exec("npm publish" + (otp ? ` --otp="${otp}"` : "")).code !== 0) {
+				console.error("npm publish failed");
+				process.exit(1);
+				return;
+			}
+			console.log(`${pkg.name} v${pkg.version} published to npm!`.green);
 		}
 	}
 	catch (error) {
