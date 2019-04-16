@@ -12,6 +12,7 @@ import yargs from "yargs";
 import ssri from "ssri";
 import parseGithubUrl from "parse-github-url";
 import fetch from "isomorphic-fetch";
+import camelcase from "camelcase";
 import "colors";
 
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
@@ -93,7 +94,10 @@ async function doRelease () {
 	const comment = argv.comment || argv._[0];
 	const oldVersion = pkg.version;
 	const repository = pkg.repository ? tryEx(() => parseGithubUrl(get(pkg, "repository.url") || "") || {}, {}) : {name: pkg.name, owner: get(pkg, "va-release.owner")};
-
+	pkg["va-release"] = pkg["va-release"] || {};
+	if (!pkg["va-release"].library) {
+		pkg["va-release"].library = camelcase(pkg.name);
+	}
 	function restoreVersion () {
 		pkg.version = oldVersion;
 		fs.writeFileSync("./package.json", `${JSON.stringify(pkg, null, "\t")}\n`, "utf8");
