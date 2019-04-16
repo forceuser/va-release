@@ -1,11 +1,11 @@
 {
 	"name": "va-release",
-	"version": "1.1.12",
+	"version": "1.1.13",
 	"description": "release publishing tool for npm and github",
 	"main": "index.js",
 	"bin": "cli.js",
 	"engines": {
-		"node": ">=6.0.0"
+		"node": ">=10.0.0"
 	},
 	"_moduleAliases": {
 		"va-release": "./index.js"
@@ -83,8 +83,6 @@
 		"babel-eslint": ">=10.0.1",
 		"cross-env": "^5.2.0",
 		"deepmerge": "^3.2.0",
-		"eslint": ">=5.16.0",
-		"foreach-cli": "^1.8.1",
-		"npm-run-all": "^4.1.5"
+		"eslint": ">=5.16.0"
 	}
 }
