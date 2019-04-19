@@ -235,7 +235,7 @@ async function main () {
 						"authorization": `token ${process.env.GIT_RELEASE_TOKEN}`,
 						"content-type": "application/json",
 					},
-					body: JSON.stringify({"name": "va-create"}),
+					body: JSON.stringify({"name": repository.name}),
 				})
 					.then(response => response.json());
 
