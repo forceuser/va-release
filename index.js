@@ -16,7 +16,12 @@ import camelcase from "camelcase";
 import "colors";
 
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
-const settings = pkg["va-release"];
+const settings = pkg["va-release"] || {};
+const flags = new Set(settings.flags || []);
+
+if (!settings.library) {
+	settings.library = camelcase(pkg.name);
+}
 
 const bump = "patch, minor, major, prepatch, preminor, premajor, prerelease".split(", ");
 const argv = yargs(process.argv.slice(2))
@@ -43,6 +48,12 @@ const argv = yargs(process.argv.slice(2))
 	.choices("v", bump)
 	.version(false)
 	.help("help").argv;
+
+["no-github", "no-templates", "no-git", "no-npm", "github", "templates", "github"].forEach(flag => {
+	if (argv[flag]) {
+		flags.add(flag);
+	}
+});
 
 let currentFileDirectory = process.cwd();
 
@@ -108,10 +119,6 @@ async function main () {
 	const comment = argv.comment || argv._[0];
 	const oldVersion = pkg.version;
 	const repository = pkg.repository ? tryEx(() => parseGithubUrl(get(pkg, "repository.url") || "") || {}, {}) : {name: pkg.name, owner: get(pkg, "va-release.owner")};
-	pkg["va-release"] = pkg["va-release"] || {};
-	if (!pkg["va-release"].library) {
-		pkg["va-release"].library = camelcase(pkg.name);
-	}
 
 	function restoreVersion () {
 		pkg.version = oldVersion;
@@ -177,7 +184,7 @@ async function main () {
 	}
 
 	let restoreVersionFlag = false;
-	if (argv.version && !argv.templates) {
+	if (argv.version && !flags.has("templates")) {
 		pkg.version = semver.inc(pkg.version, argv.version);
 		fs.writeFileSync("./package.json", `${JSON.stringify(pkg, null, "\t")}\n`, "utf8");
 		restoreVersionFlag = true;
@@ -189,7 +196,7 @@ async function main () {
 		}
 	});
 
-	if (!argv["no-templates"]) {
+	if (!flags.has("no-templates")) {
 		buildTemplates({
 			version: pkg.version,
 			timestamp: new Date(),
@@ -212,13 +219,13 @@ async function main () {
 		});
 	}
 
-	if (argv.templates) {
+	if (flags.has("templates")) {
 		return;
 	}
 
 	restoreVersionFlag = true;
 	const releaseToken = argv.token || process.env.GIT_RELEASE_TOKEN;
-	if (!argv["no-github"] && !releaseToken) {
+	if (!flags.has("no-github") && !releaseToken) {
 		console.log("Error!".red, "Please specify github release token via " + "--token".cyan + " argument or " + "GIT_RELEASE_TOKEN".cyan + " enviroment variable.");
 		process.exit(1);
 		return;
@@ -226,7 +233,7 @@ async function main () {
 
 	try {
 
-		if (!argv["no-git"]) {
+		if (!flags.has("no-git")) {
 			if (!isGitRepo()) {
 				const response = await fetch(`https://api.github.com/user/repos`, {
 					method: "POST",
@@ -253,7 +260,7 @@ async function main () {
 		}
 
 		restoreVersionFlag = false;
-		if (!argv["no-github"]) {
+		if (!flags.has("no-github")) {
 			try {
 				await publishToGithub(repository, pkg, settings && settings.assets ? globby.sync(settings.assets) : []);
 				console.log(`${pkg.name} v${pkg.version} published to github!`.green);
@@ -267,7 +274,7 @@ async function main () {
 			}
 		}
 
-		if (!argv.github && !argv["no-npm"]) {
+		if (!flags.has("github") && !flags.has("no-npm")) {
 			const otp = await readln("Input npm otp password or leave it empty: ");
 			if (shell.exec("npm publish" + (otp ? ` --otp="${otp}"` : "")).code !== 0) {
 				console.error("npm publish failed");
