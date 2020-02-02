@@ -203,16 +203,16 @@ async function main () {
 			package: pkg,
 			repository,
 			ssri () {
-				return fp =>
+				return (fp, render) =>
 					ssri.fromData(fs.readFileSync(
-						path.resolve(currentFileDirectory || "./", fp),
+						path.resolve(currentFileDirectory || "./", render(fp)),
 						"utf8"
 					));
 			},
 			file () {
-				return fp =>
+				return (fp, render) =>
 					fs.readFileSync(
-						path.resolve(currentFileDirectory || "./", fp),
+						path.resolve(currentFileDirectory || "./", render(fp)),
 						"utf8"
 					);
 			},
