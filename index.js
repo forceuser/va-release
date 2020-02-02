@@ -205,14 +205,14 @@ async function main () {
 			ssri () {
 				return (fp, render) =>
 					ssri.fromData(fs.readFileSync(
-						path.resolve(currentFileDirectory || "./", render(fp)),
+						path.resolve(currentFileDirectory || "./", render(fp, this)),
 						"utf8"
 					));
 			},
 			file () {
 				return (fp, render) =>
 					fs.readFileSync(
-						path.resolve(currentFileDirectory || "./", render(fp)),
+						path.resolve(currentFileDirectory || "./", render(fp, this)),
 						"utf8"
 					);
 			},
