@@ -235,17 +235,38 @@ async function main () {
 
 		if (!flags.has("no-git")) {
 			if (!isGitRepo()) {
-				const response = await fetch(`https://api.github.com/user/repos`, {
-					method: "POST",
-					redirect: "follow",
-					headers: {
-						"authorization": `token ${process.env.GIT_RELEASE_TOKEN}`,
-						"content-type": "application/json",
-					},
-					body: JSON.stringify({"name": repository.name}),
-				})
-					.then(response => response.json());
+				let response;
+				try {
+					response = await fetch(`https://api.github.com/user/repos`, {
+						method: "POST",
+						redirect: "follow",
+						headers: {
+							"authorization": `token ${process.env.GIT_RELEASE_TOKEN}`,
+							"content-type": "application/json",
+						},
+						body: JSON.stringify({"name": repository.name}),
+					})
+						.then(response => response.json());
 
+				}
+				catch (error) {
+					//
+				}
+				try {
+					response = await fetch(`https://api.github.com/repos/${repository.owner}/${repository.name}`, {
+						method: "GET",
+						redirect: "follow",
+						headers: {
+							"authorization": `token ${process.env.GIT_RELEASE_TOKEN}`,
+							"content-type": "application/json",
+						},
+					})
+						.then(response => response.json());
+				}
+				catch (error) {
+					console.log("ERROR", error);
+				}
+				console.log("response", response);
 				const res = shell.exec(`git init && git add --all && git commit -am "${pkg.version} - ${comment ? comment : `release commit`}" && git remote add origin ${response.ssh_url} && git push -u origin master`);
 				if (res.code !== 0) {
 					throw Error(res.stderr);
